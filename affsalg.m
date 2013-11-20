@@ -14,22 +14,21 @@ Xk    = diag(xk);
 lenXk = size(Xk);
 p    = pinv(A*(Xk^2)*A')*(A*(Xk^2)*c);
 r    = c-(A'*p);
-e    = ones(lenXk(1));
+e    = ones(lenXk(1),1);
 
 %%Optimality and unboundedness checks
-opt = e'*Xk*r<ephsilon;
+opt = (e'*Xk*r<ephsilon)*(min(r)>=0) ;
 unbnd = (-(Xk^2)*r>=0);
 
-if (opt==1)
-    %disp(A*(Xk^2)*A');
-    disp((A'*p));
-    message = sprintf('Optimality reached at iteration no. %d',k);
+if (unbnd==1)
+
+    message = sprintf('Unbounded solution : -inf at iteration no. %d',k);
     xopt=xk;
     k=k+1;
     return
 end
-if (unbnd==1)
-    message = sprintf('Unbounded solution : -inf at iteration no. %d',k);
+if (opt==1)
+    message = sprintf('Optimality reached at iteration no. %d',k);
     xopt=xk;
     k=k+1;
     return
