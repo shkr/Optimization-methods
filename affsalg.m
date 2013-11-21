@@ -1,6 +1,7 @@
 
-function [xopt, k, message] = affsalg(xk,A,c,beta,ephsilon,k)
-%% Inputs for the affine scaling algorithm %%
+function [xopt, k, message, path] = affsalg2(x0,A,c,beta,ephsilon,k,path)
+
+%% Inputs for the affine scaling algorithm 
 % A = m x n matrix
 % b = m x 1 matrix
 % c = n x 1 matrix
@@ -10,35 +11,43 @@ function [xopt, k, message] = affsalg(xk,A,c,beta,ephsilon,k)
 % ephsilon : Optimality tolerance
 % beta     : Step size
 
-Xk    = diag(xk);
-lenXk = size(Xk);
-p    = pinv(A*(Xk^2)*A')*(A*(Xk^2)*c);
+xk   = x0';
+Xk   = diag(xk);
+p    = inv(A*(Xk^2)*A')*(A*(Xk^2)*c);
 r    = c-(A'*p);
+
+lenXk = size(Xk);
 e    = ones(lenXk(1),1);
 
-%%Optimality and unboundedness checks
-opt = (e'*Xk*r<ephsilon)*(min(r)>=0) ;
-unbnd = (-(Xk^2)*r>=0);
 
-if (unbnd==1)
 
-    message = sprintf('Unbounded solution : -inf at iteration no. %d',k);
-    xopt=xk;
+while ( (e'*Xk*r>ephsilon) || (min(r)<0)) %%Optimality 
     k=k+1;
-    return
-end
-if (opt==1)
-    message = sprintf('Optimality reached at iteration no. %d',k);
-    xopt=xk;
-    k=k+1;
-    return
-else
+    if -(Xk^2)*r>=0                       %%unboundedness checks
+         message = sprintf('Unbounded solution : -inf at iteration no. %d',k);
+         xopt=xk;
+         return
+    end
+    
     message = sprintf('In progress');
+    xk = xk - ((beta*(Xk^2*r))/max(Xk*r));
+
+    
+    path=[path xk];
+    Xk    = diag(xk);
+    p    = inv(A*(Xk^2)*A')*(A*(Xk^2)*c);
+    r    = c-(A'*p);
+   
+end
+
+
+message = sprintf('Optimality reached at iteration no. %d',k);
+xopt=xk;
+return
+
 end 
 
-xk = xk - beta*(Xk^2*r)/norm(Xk*r);
 
-[xopt, k, message] =  affsalg(xk,A,c,beta,ephsilon,k+1);
 
-end
+
     
